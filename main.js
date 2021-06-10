@@ -2,7 +2,7 @@ window.onload = main;
 
 const $ = name => document.querySelector(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
-let joystick, player;
+let joystick, player, terrain, nodesData;
 
 const resolutions = [
     [ 640, 360 ],
@@ -21,6 +21,7 @@ let ratio = 1;
 
 const textures = {
     ant: {
+        idle: [],
         walking: [],
     },
 };
@@ -40,6 +41,11 @@ async function preload()
         const img = await loadImg(`./assets/Walking_${i}.png`);
         textures.ant.walking.push(img);
     }
+    const img = await loadImg(`./assets/Idle_0.png`);
+    textures.ant.idle.push(img);
+
+    nodesData = await (await fetch("./data/nodes.json")).json();
+    
 }
 
 async function main()
@@ -59,7 +65,16 @@ async function main()
     }
 
     joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
-    player = new Ant(new Vec2(width / 2, height / 2));
+    player = new Ant(new Vec2(...nodesData[0]));
+
+    const w = adapt(80);
+    const nodes = nodesData.map((data, i) => new Node(new Vec2(...data), w, i));
+    
+    const paths = [
+        [1, 2],
+        [0, 1]
+    ];
+    terrain = new Terrain(nodes.length, nodes, paths);
 
     setupEvents();
 
@@ -79,6 +94,7 @@ function render()
 
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, width, height);
+    terrain.render();
 
     joystick.render();
     player.render();

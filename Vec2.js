@@ -55,9 +55,9 @@ class Vec2
     
     angle(v = new Vec2(1, 0))
     {
-      const norm = this.normalize();
+      const norm = this.copy().normalize();
       const dot = norm.dot(v);
-      const aMod = this.dist();
+      const aMod = norm.dist();
       const bMod = v.dist();
       
       const fact = (norm.y > 0 ? 1 : -1);
