@@ -11,7 +11,7 @@ class Node
     {
         ctx.save();
 
-        ctx.fillStyle = "red";
+        ctx.fillStyle = "rgb(179, 179, 18)";
         ctx.beginPath();
         ctx.arc(...this.pos, this.w / 2, 0, 2 * Math.PI);
         ctx.fill();

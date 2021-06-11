@@ -2,7 +2,7 @@ window.onload = main;
 
 const $ = name => document.querySelector(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
-let joystick, player, terrain, nodesData;
+let joystick, player, terrain, nodesData, offset;
 
 const resolutions = [
     [ 640, 360 ],
@@ -15,7 +15,7 @@ const resolutions = [
     [ 1920, 1080 ]
 ];
 
-const [ height, width ] = resolutions[2];
+const [ height, width ] = resolutions[7];
 const adapt = val => val * width / 480;
 let ratio = 1;
 
@@ -24,6 +24,7 @@ const textures = {
         idle: [],
         walking: [],
     },
+    path: null,
 };
 
 function loadImg(path)
@@ -43,6 +44,7 @@ async function preload()
     }
     const img = await loadImg(`./assets/Idle_0.png`);
     textures.ant.idle.push(img);
+    textures.path = await loadImg(`./assets/path.png`);
 
     nodesData = await (await fetch("./data/nodes.json")).json();
     
@@ -65,16 +67,15 @@ async function main()
     }
 
     joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
-    player = new Ant(new Vec2(...nodesData[0]));
+    player = new Ant(new Vec2(...nodesData[0][0]).modify(adapt));
 
-    const w = adapt(80);
-    const nodes = nodesData.map((data, i) => new Node(new Vec2(...data), w, i));
+    const w = adapt(150);
+    const nodes = nodesData[0].map((data, i) => new Node(new Vec2(...data).modify(adapt), w, i));
     
-    const paths = [
-        [1, 2],
-        [0, 1]
-    ];
-    terrain = new Terrain(nodes.length, nodes, paths);
+    const pairs = nodesData[1];
+    terrain = new Terrain(nodes.length, nodes, pairs);
+
+    offset = new Vec2();
 
     setupEvents();
 
@@ -86,18 +87,25 @@ async function main()
 function update()
 {
     player.update();
+
+    offset = new Vec2(width / 2, height / 2).sub(player.pos);
 }
 
 function render()
 {
     update();
-
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "rgb(110, 77, 0)";
     ctx.fillRect(0, 0, width, height);
+
+    ctx.save();
+    ctx.translate(...offset);
+
     terrain.render();
+    player.render();
+
+    ctx.restore();
 
     joystick.render();
-    player.render();
     window.requestAnimationFrame(render);
 }
 

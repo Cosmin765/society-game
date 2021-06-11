@@ -1,39 +1,47 @@
 class Terrain
 {
-    constructor(n, nodes = [], paths = [])
+    constructor(n, nodes = [], pairs = [])
     {
-        this.paths = paths;
+        this.pairs = pairs;
         this.matrix = Array(n).fill(0).map(_ => Array(n).fill(0));
         this.nodes = nodes;
+        this.paths = [];
         
-        for(const [i, j] of paths)
+        for(const [i, j] of pairs)
             this.matrix[i][j] = this.matrix[j][i] = 1;
     }
 
-    drawLine(i, j) {
+    drawPath(i, j) {
         const node1 = this.nodes[i];
         const node2 = this.nodes[j];
+        const w = adapt(50);
+        const v = node1.pos.copy().sub(node2.pos);
 
-        ctx.strokeStyle = "cyan";
-        ctx.lineWidth = adapt(40);
-        ctx.beginPath();
-        ctx.moveTo(...node1.pos);
-        ctx.lineTo(...node2.pos);
-        ctx.stroke();
-        ctx.closePath();
+        ctx.save();
+
+        ctx.translate(...node1.pos.copy().add(node2.pos).div(2)); // translating to the middle
+        ctx.rotate(v.angle() + Math.PI / 2); // this is self-explainatory
+        ctx.translate(0, -v.dist() / 2) // to center the whole path vertically
+        ctx.translate(-w * 3/4 , -w * 3/4); // to center the tile relatively
+        
+        // draw the relative path
+        for(let i = 0; i <= v.dist(); i += w)
+        {
+            ctx.drawImage(textures.path, 0, i, w * 3/2, w * 3/2);
+        }
+
+        ctx.restore();
     }
 
     render()
     {
         ctx.save();
-        ctx.fillStyle = "rgb(0, 255, 0)";
-        ctx.fillRect(0, 0, width, height);
 
         for(const node of this.nodes)
             node.render();
 
-        for(const [i, j] of this.paths)
-            this.drawLine(i, j);
+        for(const [i, j] of this.pairs)
+            this.drawPath(i, j);
 
         ctx.restore();
     }

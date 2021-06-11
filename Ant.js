@@ -25,61 +25,54 @@ class Ant extends Animatable
             this.setAnim(textures.ant.idle);
         }
 
+        // finding whether or not I'm outside the nodes
         this.strict = true;
         for(const node of terrain.nodes)
         {
             if(node.collided(this.pos)) {
-                if(node.id !== this.nodeId) {
-                    this.available = [ node.id ];
-                    for(let i = 0; i < terrain.nodes.length; ++i)
-                    {
-                        if(terrain.matrix[node.id][i])
-                            this.available.push(i);
-                    }
-                }
+                this.available = [ node.id ];
+                for(let i = 0; i < terrain.nodes.length; ++i)
+                    if(terrain.matrix[node.id][i])
+                        this.available.push(i);
+
                 this.nodeId = node.id;
                 this.strict = false;
                 break;
             }
         }
-        if(this.strict) {
-            if(this.nodeId !== -1) {
-                this.available = [ this.nodeId, this.nextNodeId ];
-                this.nodeId = -1;
-            }
+        if(this.strict && this.nodeId !== -1) {
+            this.available = [ this.nodeId, this.nextNodeId ];
+            this.nodeId = -1;
         }
 
-        let moved = false;
+        if(this.strict) {
+            if(this.nextNodeId !== -1 && vel.dist()) {
+                const fixedVel = terrain.nodes[this.nextNodeId].pos.copy().sub(this.pos).normalize().mult(2);
+                const angle = fixedVel.angle() + Math.PI / 2;
+                
+                if(Math.abs(this.angle - angle) < 0.6)
+                    this.pos.add(fixedVel.modify(adapt));
+            }
+        } else {
+            this.pos.add(vel.modify(adapt));
+        }
+
+        // finding the next node
         for(const node of terrain.nodes)
         {
             const angle = node.pos.copy().sub(this.pos).angle() + Math.PI / 2;
-            
-            let shouldMove = !this.strict && terrain.nodes[this.nodeId].collided(this.pos);
 
-            if(Math.abs(this.angle - angle) < 0.5) {
-                shouldMove = true;
-                if(this.nextNodeId !== -1 && vel.dist())
-                    vel = terrain.nodes[this.nextNodeId].pos.copy().sub(this.pos).normalize().mult(2);
-
-                if(this.available.includes(node.id) && node.id != this.nodeId) {
-                    this.nextNodeId = node.id;
-                }
+            if(Math.abs(this.angle - angle) < 0.8 && this.available.includes(node.id) && node.id != this.nodeId) {
+                this.nextNodeId = node.id;
             }
-
-            $(".info").innerHTML = `
-                Available: ${this.available}<br>
-                Current: ${this.nodeId}<br>
-                Next: ${this.nextNodeId}<br>
-                Strict: ${this.strict}<br>
-                Should move: ${shouldMove}
-            `;
-
-            if(moved || !shouldMove)
-                continue;
-                
-                this.pos.add(vel);
-            moved = true;
         }
+
+        // $(".info").innerHTML = `
+        //     Available: ${this.available}<br>
+        //     Current: ${this.nodeId}<br>
+        //     Next: ${this.nextNodeId}<br>
+        //     Strict: ${this.strict}<br>
+        // `;
     }
 
     render()
