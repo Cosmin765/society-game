@@ -3,6 +3,7 @@ window.onload = main;
 const $ = name => document.querySelector(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
 let joystick, player, terrain, nodesData, offset;
+let npcs = [];
 
 const resolutions = [
     [ 640, 360 ],
@@ -15,7 +16,7 @@ const resolutions = [
     [ 1920, 1080 ]
 ];
 
-const [ height, width ] = resolutions[7];
+const [ height, width ] = resolutions[2];
 const adapt = val => val * width / 480;
 let ratio = 1;
 
@@ -67,14 +68,16 @@ async function main()
     }
 
     joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
-    player = new Ant(new Vec2(...nodesData[0][0]).modify(adapt));
+    player = new Player(new Vec2(...nodesData[0][0]).modify(adapt));
 
-    const w = adapt(150);
-    const nodes = nodesData[0].map((data, i) => new Node(new Vec2(...data).modify(adapt), w, i));
+    const nodes = nodesData[0].map((data, i) => new Node(new Vec2(...data).modify(adapt), adapt(150), i));
     
     const pairs = nodesData[1];
     terrain = new Terrain(nodes.length, nodes, pairs);
-
+    
+    const npc = new Npc(new Vec2(...nodesData[0][2]).modify(adapt));
+    npcs.push(npc);
+    
     offset = new Vec2();
 
     setupEvents();
@@ -87,6 +90,9 @@ async function main()
 function update()
 {
     player.update();
+
+    for(const npc of npcs)
+        npc.update();
 
     offset = new Vec2(width / 2, height / 2).sub(player.pos);
 }
@@ -101,6 +107,10 @@ function render()
     ctx.translate(...offset);
 
     terrain.render();
+
+    for(const npc of npcs)
+        npc.render();
+
     player.render();
 
     ctx.restore();
