@@ -1,22 +1,31 @@
 class Terrain
 {
-    constructor(n, nodes = [], pairs = [])
+    constructor(nodesPos = [], pairs = [])
     {
         this.pairs = pairs;
-        this.matrix = Array(n).fill(0).map(_ => Array(n).fill(0));
-        this.nodes = nodes;
-        this.paths = [];
-        
-        for(const [i, j] of pairs)
-            this.matrix[i][j] = this.matrix[j][i] = 1;
-
-        this.initPaths();
+        this.nodes = nodesPos.map(pos => new Node(pos));
+        this.paths = pairs.map(([i, j]) => new Path(this.nodes[i], this.nodes[j]));
     }
 
-    initPaths()
+    addNode(pos)
     {
-        for(const [i, j] of this.pairs)
-            this.paths.push(new Path(this.nodes[i], this.nodes[j]));
+        if(!pos) return;
+
+        this.nodes.push(new Node(pos));
+    }
+    
+    addPath(i, j) {
+        if(i >= this.nodes.length || j >= this.nodes.length)
+            return console.log("out of bound");
+        
+        this.paths.push(new Path(this.nodes[i], this.nodes[j]));
+    }
+
+    addData(data) {
+        for(const pos of data[0])
+            this.addNode(pos);
+        for(const [i, j] of data[1])
+            this.addPath(i, j);
     }
 
     render()

@@ -23,18 +23,13 @@ class Player extends Ant
             this.setAnim(textures.ant.idle);
         }
 
-        let shouldMove = false;
         const nextPos = this.pos.copy().add(vel);
         for(const elem of [...terrain.paths, ...terrain.nodes])
         {
             if(elem.contains(nextPos)) {
-                shouldMove = true;
+                this.pos = nextPos;
                 break;
             }
-        }
-
-        if(shouldMove) {
-            this.pos = nextPos;
         }
 
         for(const npc of npcs)

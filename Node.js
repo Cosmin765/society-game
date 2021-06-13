@@ -1,9 +1,8 @@
 class Node
 {
-    constructor(pos, w, id)
+    constructor(pos)
     {
-        this.id = id;
-        this.w = w;
+        this.w = adapt(150);
         this.pos = pos.copy();
     }
 

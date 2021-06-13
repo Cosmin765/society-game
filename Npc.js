@@ -17,11 +17,6 @@ class Npc extends Ant
         this.textBox.update();
     }
 
-    setText(text)
-    {
-
-    }
-
     activate()
     {
         if(!this.activated) {

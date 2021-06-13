@@ -70,10 +70,21 @@ async function main()
     joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
     player = new Player(new Vec2(...nodesData[0][0]).modify(adapt));
 
-    const nodes = nodesData[0].map((data, i) => new Node(new Vec2(...data).modify(adapt), adapt(150), i));
-    
+    const nodesPos = nodesData[0].map(pos => new Vec2(...pos).modify(adapt));
     const pairs = nodesData[1];
-    terrain = new Terrain(nodes.length, nodes, pairs);
+
+    terrain = new Terrain(nodesPos, pairs);
+
+    terrain.addData([
+        [
+           new Vec2(500, 500).modify(adapt),
+           new Vec2(700, 500).modify(adapt),
+        ],
+        [
+            [ 4, 0 ],
+            [ 4, 5 ]
+        ]
+    ]);
     
     const npc = new Npc(new Vec2(...nodesData[0][2]).modify(adapt));
     npcs.push(npc);
