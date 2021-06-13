@@ -119,6 +119,14 @@ function render()
     window.requestAnimationFrame(render);
 }
 
+function getRot(a)
+{
+    return [
+        [ Math.cos(a), -Math.sin(a) ],
+        [ Math.sin(a),  Math.cos(a) ]
+    ];
+}
+
 function setupEvents()
 {
     addEventListener("touchstart", e => {

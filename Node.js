@@ -20,7 +20,7 @@ class Node
         ctx.restore();
     }
 
-    collided(pos)
+    contains(pos)
     {
         return this.pos.copy().sub(pos).dist() < this.w / 2;
     }

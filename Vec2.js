@@ -57,12 +57,10 @@ class Vec2
     {
       const norm = this.copy().normalize();
       const dot = norm.dot(v);
-      const aMod = norm.dist();
-      const bMod = v.dist();
       
       const fact = (norm.y > 0 ? 1 : -1);
       
-      return fact * Math.acos(dot) / (aMod * bMod);
+      return fact * Math.acos(dot / norm.dist() * v.dist());
     }
     
     limit(r)
