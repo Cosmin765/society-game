@@ -19,6 +19,7 @@ class Path
         ctx.rotate(this.angle); // this is self-explainatory
         ctx.translate(0, -this.dist / 2) // to center the whole path vertically
         ctx.translate(-this.w * 3/4 , -this.w * 3/4); // to center the tile relatively
+        ctx.globalAlpha = 0.1;
         
         // draw the relative path
         for(let i = 0; i <= this.dist; i += this.w)

@@ -8,19 +8,28 @@ class Node
 
     render()
     {
+        // console.log(terrain.nodes.indexOf(this));
+
         ctx.save();
 
         ctx.fillStyle = "rgb(179, 179, 18)";
         ctx.beginPath();
         ctx.arc(...this.pos, this.w / 2, 0, 2 * Math.PI);
-        ctx.fill();
         ctx.closePath();
+        ctx.fill();
+
+        ctx.font = "30px Arial";
+        ctx.fillStyle = "black";
+        ctx.translate(0, -adapt(120));
+        ctx.fillText(terrain.nodes.indexOf(this), ...this.pos);
 
         ctx.restore();
     }
 
-    contains(pos)
+    contains(pos, constraint)
     {
-        return this.pos.copy().sub(pos).dist() < this.w / 2;
+        const dist = this.pos.copy().sub(pos).dist();
+        if(constraint) return dist < constraint;
+        return dist < this.w / 2;
     }
 }

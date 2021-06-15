@@ -48,7 +48,6 @@ async function preload()
     textures.path = await loadImg(`./assets/path.png`);
 
     nodesData = await (await fetch("./data/nodes.json")).json();
-    
 }
 
 async function main()
@@ -74,17 +73,6 @@ async function main()
     const pairs = nodesData[1];
 
     terrain = new Terrain(nodesPos, pairs);
-
-    terrain.addData([
-        [
-           new Vec2(500, 500).modify(adapt),
-           new Vec2(700, 500).modify(adapt),
-        ],
-        [
-            [ 4, 0 ],
-            [ 4, 5 ]
-        ]
-    ]);
     
     const npc = new Npc(new Vec2(...nodesData[0][2]).modify(adapt));
     npcs.push(npc);
