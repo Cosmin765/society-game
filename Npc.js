@@ -8,7 +8,7 @@ class Npc extends Ant
             "Anyway, we don't have much time. We need to get out of here!",
             "Let's go!!"
         ];
-        this.textBox = new TextBox(texts, adapt(200));
+        this.textBox = new TextBox(texts, adapt(200), this.finishedTextHandler.bind(this));
         this.activated = false;
         this.currNode = this.calculateCurrNode();
         this.path = [];
@@ -78,9 +78,8 @@ class Npc extends Ant
         if(this.path.length) {
             this.setAnim(textures.ant.walking);
             const vel = terrain.nodes[this.path[0]].pos.copy().sub(this.pos).normalize().mult(2);
-            this.angle = 0.9 * this.angle + 0.1 * (vel.angle() + Math.PI / 2); // to interpolate
-
-            console.log(this.angle);
+            let change = vel.angle() + Math.PI / 2;
+            this.angle = 0.9 * this.angle + 0.1 * change; // to interpolate
 
             this.pos.add(vel);
 
@@ -90,15 +89,20 @@ class Npc extends Ant
             }
         } else {
             this.setAnim(textures.ant.idle);
-            this.setTargetNode(Math.random() * terrain.nodes.length | 0);
+            // this.setTargetNode(Math.random() * terrain.nodes.length | 0);
         }
+    }
+
+    finishedTextHandler()
+    {
+        this.setTargetNode(5);
     }
 
     activate()
     {
-        if(!this.activated) {
-            this.textBox.visible = true;
+        if(!this.activated && this.anim === textures.ant.idle) {
             this.textBox.reset();
+            this.textBox.visible = true;
         }
         this.activated = true;
     }

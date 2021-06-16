@@ -1,18 +1,23 @@
 class TextBox
 {
-    constructor(texts = [""], width = adapt(150))
+    constructor(texts = [""], width = adapt(150), finishedTextHandler)
     {
-        this.texts = texts;
-        this.currText = "";
-        this.acc = 0;
-        this.index = 0;
-        this.textsIndex = 0;
-        this.text = this.texts[this.textsIndex];
+        this.size = new Vec2(width, 0);
+        this.setTexts(texts);
+        
         this.fontSize = adapt(30);
         this.visible = false;
         this.frozen = false;
-        
-        this.size = new Vec2(width, 0);
+        this.finishedTextHandler = finishedTextHandler;
+    }
+
+    setTexts(texts)
+    {
+        this.texts = texts;
+        this.currText = "";
+        this.textsIndex = 0;
+        this.text = this.texts[this.textsIndex];
+        this.reset();
     }
 
     reset()
@@ -43,12 +48,17 @@ class TextBox
             }
         } else if(this.textsIndex < this.texts.length - 1) {
             this.frozen = true;
-            setTimeout(() => {
+            wait(1000).then(() => {
                 this.reset();
                 this.textsIndex++;
                 this.text = this.texts[this.textsIndex];
                 this.frozen = false;
-            }, 1000);
+            });
+        } else {
+            wait(1000).then(() => {
+                this.visible = false;
+                this.finishedTextHandler();
+            });
         }
     }
 

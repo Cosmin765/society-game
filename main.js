@@ -16,6 +16,8 @@ const resolutions = [
     [ 1920, 1080 ]
 ];
 
+const wait = amount => new Promise(resolve => setTimeout(resolve, amount));
+
 const [ height, width ] = resolutions[2];
 const adapt = val => val * width / 480;
 let ratio = 1;
