@@ -2,7 +2,7 @@ class Ant extends Animatable
 {
     constructor(pos)
     {
-        super(new Vec2(130, 130).modify(adapt));
+        super(new Vec2(100, 100).modify(adapt));
         this.pos = pos.copy();
         this.setAnim(textures.ant.idle);
         this.angle = 0;

@@ -83,7 +83,7 @@ class Npc extends Ant
 
             this.pos.add(vel);
 
-            if(terrain.nodes[this.path[0]].contains(this.pos, adapt(10))) {
+            if(terrain.nodes[this.path[0]].contains(this.pos, adapt(20))) {
                 this.currNode = this.path[0];
                 this.path.shift();
             }
@@ -103,16 +103,18 @@ class Npc extends Ant
         if(!this.activated && this.anim === textures.ant.idle) {
             this.textBox.reset();
             this.textBox.visible = true;
+
+            this.activated = true;
         }
-        this.activated = true;
     }
 
     deactivate()
     {
         if(this.activated) {
             this.textBox.visible = false;
+            
+            this.activated = false;
         }
-        this.activated = false;
     }
 
     renderCustom()

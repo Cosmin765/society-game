@@ -2,7 +2,7 @@ class Node
 {
     constructor(pos)
     {
-        this.w = adapt(150);
+        this.w = adapt(110);
         this.pos = pos.copy();
     }
 
@@ -20,7 +20,7 @@ class Node
 
         ctx.font = "30px Arial";
         ctx.fillStyle = "black";
-        ctx.translate(0, -adapt(120));
+        ctx.translate(0, -adapt(100));
         ctx.fillText(terrain.nodes.indexOf(this), ...this.pos);
 
         ctx.restore();

@@ -56,6 +56,8 @@ async function main()
 {
     await preload();
 
+    console.log(10 % (2 * Math.PI));
+
     // setup
 
     canvas.width = width;
@@ -76,8 +78,10 @@ async function main()
 
     terrain = new Terrain(nodesPos, pairs);
     
-    const npc = new Npc(new Vec2(...nodesData[0][2]).modify(adapt));
-    npcs.push(npc);
+    for(let i = 0; i < 1; ++i) {
+        const npc = new Npc(new Vec2(...nodesData[0][Math.random() * nodesData[0].length | 0]).modify(adapt));
+        npcs.push(npc);
+    }
     
     offset = new Vec2();
 
