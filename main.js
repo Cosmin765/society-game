@@ -2,7 +2,7 @@ window.onload = main;
 
 const $ = name => document.querySelector(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
-let joystick, player, terrain, nodesData, offset;
+let joystick, player, terrain, nodesData, offset, zoom = $(".slider").value;
 let npcs = [];
 
 const resolutions = [
@@ -56,8 +56,6 @@ async function main()
 {
     await preload();
 
-    console.log(10 % (2 * Math.PI));
-
     // setup
 
     canvas.width = width;
@@ -71,18 +69,19 @@ async function main()
     }
 
     joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
-    player = new Player(new Vec2(...nodesData[0][0]).modify(adapt));
+    // player = new Player(new Vec2(...nodesData[0][0]).modify(adapt));
+    player = new Player(new Vec2());
 
     const nodesPos = nodesData[0].map(pos => new Vec2(...pos).modify(adapt));
     const pairs = nodesData[1];
 
     terrain = new Terrain(nodesPos, pairs);
-    
-    for(let i = 0; i < 1; ++i) {
+
+    for(let i = 0; i < 10; ++i) {
         const npc = new Npc(new Vec2(...nodesData[0][Math.random() * nodesData[0].length | 0]).modify(adapt));
         npcs.push(npc);
     }
-    
+
     offset = new Vec2();
 
     setupEvents();
@@ -109,6 +108,9 @@ function render()
     ctx.fillRect(0, 0, width, height);
 
     ctx.save();
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-width / 2, -height / 2);
     ctx.translate(...offset);
 
     terrain.render();
@@ -140,43 +142,45 @@ function setupEvents()
             const touch = e.touches[i];
             const pos = new Vec2(touch.pageX, touch.pageY);
             pos.mult(ratio);
-            
+
             if(joystick.clicked(pos)) {
                 joystick.setTouch(touch.identifier, pos);
                 break;
             }
         }
     });
-    
+
     addEventListener("touchmove", e => {
         for(let i = 0; i < e.touches.length; ++i)
         {
             const touch = e.touches[i];
             const pos = new Vec2(touch.pageX, touch.pageY);
             pos.mult(ratio);
-            
+
             if(joystick.touchID === touch.identifier)
             joystick.update(pos);
         }
     });
-    
+
     addEventListener("touchend", e => {
         let present = false;
-        
+
         for(let i = 0; i < e.touches.length; ++i)
         {
             const touch = e.touches[i];
             const pos = new Vec2(touch.pageX, touch.pageY);
             pos.mult(ratio);
-            
+
             if(pos.equals(joystick.lastPos)) {
                 present = true;
                 break;
             }
         }
-        
+
         if(!present) {
             joystick.removeTouch();
         }
     });
+
+    $(".slider").addEventListener("input", e => zoom = $(".slider").value);
 }
