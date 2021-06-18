@@ -15,14 +15,21 @@ class Npc extends Ant
         this.idle = true;
     }
 
-    setTargetNode(index)
+    setTargetNode(index, shortest = true)
     {
         const paths = []; //
         const path = []; // these are just containers
-        this.findPath(this.currNode, index, path, paths);
+        this.findPath(this.currNode, index, path, paths, !shortest);
+
         if(!paths.length) // if there is no way to the node
             return;
-        this.path = this.getOptimalPath(paths);
+
+        if(!shortest) {
+            this.path = [...paths[0]];
+        } else {
+            this.path = this.getOptimalPath(paths);
+        }
+
         this.path.shift(); // removing the current node
     }
     
@@ -44,7 +51,7 @@ class Npc extends Ant
         return [...paths[index]];
     }
 
-    findPath(index, finalIdx, path, paths)
+    findPath(index, finalIdx, path, paths, every)
     {
         path.push(index);
         if(index === finalIdx) {
@@ -57,7 +64,8 @@ class Npc extends Ant
             if(terrain.matrix[index][i]) {
                 terrain.matrix[index][i] = terrain.matrix[i][index] = 0;
                 
-                this.findPath(i, finalIdx, path, paths);
+                if((every && !paths.length) || !every)
+                    this.findPath(i, finalIdx, path, paths, every);
                 
                 terrain.matrix[index][i] = terrain.matrix[i][index] = 1;
                 path.pop();
@@ -109,7 +117,7 @@ class Npc extends Ant
                 if(this.anim === textures.ant.idle)
                     this.idle = true;
             });
-            this.setTargetNode(Math.random() * terrain.nodes.length | 0);
+            this.setTargetNode(Math.random() * terrain.nodes.length | 0, false);
         }
     }
 
