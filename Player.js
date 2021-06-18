@@ -24,13 +24,31 @@ class Player extends Ant
         }
 
         const nextPos = this.pos.copy().add(vel);
-        for(const elem of [...terrain.paths, ...terrain.nodes])
-        {
-            if(elem.contains(nextPos)) {
-                this.pos = nextPos;
+
+        let found = false;
+        for(const node of terrain.nodes)
+            if(node.contains(nextPos)) {
+                found = true;
+                if(node.info) {
+                    $(".node-info").innerHTML = node.info;
+                    $(".node-info").style.display = "block";
+                }
                 break;
             }
+        
+        if(!found) {
+            $(".node-info").style.display = "none";
+            
+            for(const path of terrain.paths)
+                if(path.contains(nextPos)) {
+                    found = true;
+                    break;
+                }
         }
+        
+        
+        if(found)
+            this.pos = nextPos;
 
         for(const npc of npcs)
         {

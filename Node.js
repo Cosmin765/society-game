@@ -1,9 +1,14 @@
 class Node
 {
-    constructor(pos)
+    constructor(pos, info = "")
     {
         this.w = adapt(110);
         this.pos = pos.copy();
+        this.info = info;
+    }
+
+    setInfo(info) {
+        this.info = info;
     }
 
     render()

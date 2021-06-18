@@ -26,3 +26,18 @@ body {
     left: 10px;
     width: 95%;
 }
+
+.node-info {
+    box-sizing: border-box;
+    background-color: rgba(0, 0, 0, 0.7);
+    position: fixed;
+    width: 80vw;
+    left: 10vw;
+    text-align: center;
+    color: white;
+    top: 10px;
+    padding: 40px;
+    letter-spacing: 1px;
+    font-size: large;
+    display: none;
+}

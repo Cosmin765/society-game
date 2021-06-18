@@ -4,6 +4,7 @@ const $ = name => document.querySelector(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
 let joystick, player, terrain, nodesData, offset, zoom = $(".slider").value;
 let npcs = [];
+let buttons = [];
 
 const resolutions = [
     [ 640, 360 ],
@@ -74,13 +75,16 @@ async function main()
 
     const nodesPos = nodesData[0].map(pos => new Vec2(...pos).modify(adapt));
     const pairs = nodesData[1];
+    const nodesInfo = nodesData[2];
 
-    terrain = new Terrain(nodesPos, pairs);
+    terrain = new Terrain(nodesPos, pairs, nodesInfo);
 
     for(let i = 0; i < 10; ++i) {
         const npc = new Npc(new Vec2(...nodesData[0][Math.random() * nodesData[0].length | 0]).modify(adapt));
         npcs.push(npc);
     }
+
+    buttons.push(new ActionButton(new Vec2(width - adapt(100), height * 3 / 4), "Pick up"));
 
     offset = new Vec2();
 
@@ -123,6 +127,9 @@ function render()
     ctx.restore();
 
     joystick.render();
+    for(const btn of buttons)
+        btn.render();
+
     window.requestAnimationFrame(render);
 }
 
@@ -145,7 +152,14 @@ function setupEvents()
 
             if(joystick.clicked(pos)) {
                 joystick.setTouch(touch.identifier, pos);
-                break;
+                continue;
+            }
+
+            for(const btn of buttons)
+            {
+                if(btn.clicked(pos)) {
+                    btn.press();
+                }
             }
         }
     });
@@ -179,6 +193,26 @@ function setupEvents()
 
         if(!present) {
             joystick.removeTouch();
+        }
+
+        for(const btn of buttons)
+        {
+            let present = false;
+
+            for(let i = 0; i < e.touches.length; ++i)
+            {
+                const touch = e.touches[i];
+                const pos = adjustVec(new Vec2(touch.pageX, touch.pageY));
+
+                if(btn.clicked(pos)) {
+                    present = true;
+                    break;
+                }
+            }
+
+            if(!present) {
+                btn.release();
+            }
         }
     });
 

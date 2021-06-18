@@ -1,6 +1,6 @@
 class Terrain
 {
-    constructor(nodesPos = [], pairs = [])
+    constructor(nodesPos = [], pairs = [], nodesInfo = [])
     {
         this.pairs = pairs;
         this.nodes = nodesPos.map(pos => new Node(pos));
@@ -11,6 +11,12 @@ class Terrain
         {
             this.paths.push(new Path(this.nodes[i], this.nodes[j]));
             this.matrix[i][j] = this.matrix[j][i] = 1;
+        }
+
+        for(const index in nodesInfo)
+        {
+            const info = nodesInfo[index];
+            this.nodes[parseInt(index)].setInfo(info);
         }
     }
 
