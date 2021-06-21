@@ -8,6 +8,7 @@ class Player extends Ant
         this.nextNodeId = -1;
         this.available = [];
         this.strict = false;
+        this.carryingFood = false;
     }
 
     update()
@@ -29,10 +30,8 @@ class Player extends Ant
         for(const node of terrain.nodes)
             if(node.contains(nextPos)) {
                 found = true;
-                if(node.info) {
-                    $(".node-info").innerHTML = node.info;
+                if(node.displayInfo($(".node-info")))
                     $(".node-info").style.display = "block";
-                }
                 break;
             }
         
@@ -57,6 +56,25 @@ class Player extends Ant
             } else {
                 npc.deactivate();
             }
+        }
+    }
+
+    renderCustom()
+    {
+        if(this.carryingFood) {
+            ctx.save();
+            ctx.translate(...this.pos);
+            const foodPos = new Vec2(Math.cos(this.angle - Math.PI / 2), Math.sin(this.angle - Math.PI / 2)).mult(this.dims.y / 2);
+            ctx.translate(...foodPos);
+            ctx.fillStyle = "green";
+            const r = adapt(10);
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.closePath();
+
+            ctx.restore();
         }
     }
 }

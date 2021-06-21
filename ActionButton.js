@@ -1,6 +1,6 @@
 class ActionButton extends Interactive
 {
-    constructor(pos, text)
+    constructor(pos, text, handler = () => {})
     {
         const size = new Vec2(150, 75).modify(adapt);
 
@@ -10,20 +10,33 @@ class ActionButton extends Interactive
         this.text = text;
         this.pressed = false;
         this.disabled = false;
+        this.handler = handler.bind(this);
+        this.displayCondition = () => true;
     }
 
     press()
     {
+        if(!this.visible || !this.displayCondition())
+            return;
+        
         this.pressed = true;
     }
 
     release()
     {
-        this.pressed = false;
+        if(this.pressed) {
+            this.pressed = false;
+
+            // click handler
+            this.handler();
+        }
     }
 
     render()
     {
+        if(!this.visible || !this.displayCondition())
+            return;
+
         ctx.strokeStyle = this.pressed ? "red" : "#00ccff";
         if(this.disabled) {
             ctx.fillStyle = "grey";

@@ -2,19 +2,26 @@ window.onload = main;
 
 const $ = name => document.querySelector(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
-let joystick, player, terrain, nodesData, offset, zoom = $(".slider").value;
+let joystick, player, terrain, nodesData, nodesInfo, offset;
 let npcs = [];
-let buttons = [];
+let buttons = {};
+
+const infoMap = {};
+
+function createNodeInfo(type, description)
+{
+    return { type, description };
+}
 
 const resolutions = [
-    [ 640, 360 ],
-    [ 854, 480 ],
-    [ 960, 540 ],
-    [ 1024, 576 ],
-    [ 1280, 720 ],
-    [ 1366, 768 ],
-    [ 1600, 900 ],
-    [ 1920, 1080 ]
+    [  640,  360  ],
+    [  854,  480  ],
+    [  960,  540  ],
+    [  1024, 576  ],
+    [  1280, 720  ],
+    [  1366, 768  ],
+    [  1600, 900  ],
+    [  1920, 1080 ]
 ];
 
 const wait = amount => new Promise(resolve => setTimeout(resolve, amount));
@@ -51,6 +58,7 @@ async function preload()
     textures.path = await loadImg(`./assets/path.png`);
 
     nodesData = await (await fetch("./data/nodes.json")).json();
+    nodesInfo = await (await fetch("./data/nodesInfo.json")).json();
 }
 
 async function main()
@@ -58,6 +66,15 @@ async function main()
     await preload();
 
     // setup
+
+    const info = [ 
+        [ "food", "This is the food source of the colony." ],
+        [ "storage", "This is where the colony stores all its resources." ]
+    ];
+    for(const [type, description ] of info)
+    {
+        infoMap[type] = createNodeInfo(type, description);
+    }
 
     canvas.width = width;
     canvas.height = height;
@@ -69,22 +86,37 @@ async function main()
         ratio = height / innerHeight;
     }
 
+    $(".node-info").style.width = `${width / ratio * 0.8}px`;
+    $(".node-info").style.left = `${width / ratio * 0.1}px`;
+
     joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
     // player = new Player(new Vec2(...nodesData[0][0]).modify(adapt));
     player = new Player(new Vec2());
 
     const nodesPos = nodesData[0].map(pos => new Vec2(...pos).modify(adapt));
     const pairs = nodesData[1];
-    const nodesInfo = nodesData[2];
 
     terrain = new Terrain(nodesPos, pairs, nodesInfo);
 
-    for(let i = 0; i < 10; ++i) {
+    for(let i = 0; i < 100; ++i) {
         const npc = new Npc(new Vec2(...nodesData[0][Math.random() * nodesData[0].length | 0]).modify(adapt));
         npcs.push(npc);
     }
 
-    buttons.push(new ActionButton(new Vec2(width - adapt(100), height * 3 / 4), "Pick up"));
+    const btnPos = new Vec2(width - adapt(100), height * 3 / 4);
+
+    function foodHandler() {
+        player.carryingFood = true;
+        this.displayCondition = () => !player.carryingFood;
+    };
+
+    function releaseHandler() {
+        player.carryingFood = false;
+        this.displayCondition = () => player.carryingFood;
+    }
+
+    buttons["food"] = new ActionButton(btnPos.copy(), "Pick up", foodHandler);
+    buttons["storage"] = new ActionButton(btnPos.copy(), "Release", releaseHandler);
 
     offset = new Vec2();
 
@@ -97,6 +129,9 @@ async function main()
 
 function update()
 {
+    for(const type in buttons)
+        buttons[type].visible = false; // reseting the visibility
+
     player.update();
 
     for(const npc of npcs)
@@ -113,7 +148,7 @@ function render()
 
     ctx.save();
     ctx.translate(width / 2, height / 2);
-    ctx.scale(zoom, zoom);
+    ctx.scale($(".slider").value, $(".slider").value);
     ctx.translate(-width / 2, -height / 2);
     ctx.translate(...offset);
 
@@ -127,8 +162,8 @@ function render()
     ctx.restore();
 
     joystick.render();
-    for(const btn of buttons)
-        btn.render();
+    for(const type in buttons)
+        buttons[type].render();
 
     window.requestAnimationFrame(render);
 }
@@ -155,11 +190,11 @@ function setupEvents()
                 continue;
             }
 
-            for(const btn of buttons)
+            for(const type in buttons)
             {
-                if(btn.clicked(pos)) {
+                const btn = buttons[type];
+                if(btn.clicked(pos))
                     btn.press();
-                }
             }
         }
     });
@@ -195,8 +230,9 @@ function setupEvents()
             joystick.removeTouch();
         }
 
-        for(const btn of buttons)
+        for(const type in buttons)
         {
+            const btn = buttons[type];
             let present = false;
 
             for(let i = 0; i < e.touches.length; ++i)
@@ -210,11 +246,8 @@ function setupEvents()
                 }
             }
 
-            if(!present) {
+            if(!present)
                 btn.release();
-            }
         }
     });
-
-    $(".slider").addEventListener("input", e => zoom = $(".slider").value);
 }

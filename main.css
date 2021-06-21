@@ -32,12 +32,41 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     position: fixed;
     width: 80vw;
-    left: 10vw;
     text-align: center;
     color: white;
     top: 10px;
-    padding: 40px;
-    letter-spacing: 1px;
+    padding: 10px 35px;
     font-size: large;
     display: none;
+}
+
+.node-info h2 {
+    letter-spacing: 2px;
+    border-bottom: yellow 1px solid;
+    padding-bottom: 2px;
+    color: yellow;
+}
+
+.node-info p {
+    letter-spacing: 1px;
+}
+
+.task-list {
+    position: fixed;
+    bottom: 20vh;
+    text-align: center;
+}
+
+.task-list::before {
+    content: "Tasks";
+    background-color: yellow;
+    font-size: 28px;
+    font-weight: bold;
+    padding: 0 30px;
+}
+
+.task-list div {
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
 }

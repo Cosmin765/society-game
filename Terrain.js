@@ -15,8 +15,8 @@ class Terrain
 
         for(const index in nodesInfo)
         {
-            const info = nodesInfo[index];
-            this.nodes[parseInt(index)].setInfo(info);
+            const type = nodesInfo[index];
+            this.nodes[parseInt(index)].setInfo(infoMap[type]);
         }
     }
 

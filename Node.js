@@ -1,20 +1,36 @@
 class Node
 {
-    constructor(pos, info = "")
+    constructor(pos, info = {})
     {
         this.w = adapt(110);
         this.pos = pos.copy();
-        this.info = info;
+        this.type = this.desc = null;
+        this.setInfo(info);
     }
 
-    setInfo(info) {
-        this.info = info;
+    displayInfo(el)
+    {
+        if(!this.type) return false;
+
+        el.innerHTML = `
+            <h2>${this.type.toUpperCase()}</h2>
+            <p>${this.desc}</p>
+        `;
+
+        if(this.type in buttons)
+            buttons[this.type].visible = true;
+
+        return true;
+    }
+
+    setInfo(info)
+    {
+        this.desc = info.description;
+        this.type = info.type;
     }
 
     render()
     {
-        // console.log(terrain.nodes.indexOf(this));
-
         ctx.save();
 
         ctx.fillStyle = "rgb(179, 179, 18)";
