@@ -15,15 +15,18 @@
     <input class="slider" value="1" type="range" min="0.05" max="1" step="0.01">
     
     <div class="node-info"></div>
-    <div class="task-list">
-        <div>Pick up food</div>
-        <div>Release food</div>
-        <div>Discover other ants</div>
-        <div>Make friends</div>
+   
+    <div class="tasks invisible">
+        <div class="task-list">
+        </div>
+        <div class="toggle-btn visible">
+            <img class="invisible" src="./assets/arrow.png" />
+        </div>
     </div>
 
     <script src="Vec2.js"></script>
     <script src="Animatable.js"></script>
+    <script src="TaskMakager.js"></script>
     <script src="Interactive.js"></script>
     <script src="ActionButton.js"></script>
     <script src="Joystick.js"></script>

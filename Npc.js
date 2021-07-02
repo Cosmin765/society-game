@@ -1,84 +1,17 @@
 class Npc extends Ant
 {
-    constructor(pos)
+    constructor(pos, character = false, outfit = null, actions = [])
     {
         super(pos);
-        const texts = [
-            "Hello, dear survivor. How are you?",
-            "Anyway, we don't have much time. We need to get out of here!",
-            "Let's go!!"
-        ];
+        this.actions = actions;
+        this.actionIndex = 0;
+        const texts = character ? this.actions[this.actionIndex].dialog : [];
         this.textBox = new TextBox(texts, adapt(200), this.finishedTextHandler.bind(this));
         this.activated = false;
-        this.currNode = this.calculateCurrNode();
-        this.path = [];
         this.idle = true;
-    }
-
-    setTargetNode(index, shortest = true)
-    {
-        const paths = []; //
-        const path = []; // these are just containers
-        this.findPath(this.currNode, index, path, paths, !shortest);
-
-        if(!paths.length) // if there is no way to the node
-            return;
-
-        if(!shortest) {
-            this.path = [...paths[0]];
-        } else {
-            this.path = this.getOptimalPath(paths);
-        }
-
-        this.path.shift(); // removing the current node
-    }
-    
-    getOptimalPath(paths)
-    {
-        let minCost = Infinity, index = -1;
-        for(let i = 0; i < paths.length; ++i)
-        {
-            let cost = 0;
-            for(let j = 1; j < paths[i].length; ++j)
-                cost += terrain.nodes[paths[i][j]].pos.copy().sub(terrain.nodes[paths[i][j - 1]].pos).dist();
-
-            if(cost < minCost) {
-                minCost = cost;
-                index = i;
-            }
-        }
-        
-        return [...paths[index]];
-    }
-
-    findPath(index, finalIdx, path, paths, every)
-    {
-        path.push(index);
-        if(index === finalIdx) {
-            paths.push([...path]);
-            return;
-        }
-
-        for(let i = 0; i < terrain.matrix[index].length; ++i)
-        {
-            if(terrain.matrix[index][i]) {
-                terrain.matrix[index][i] = terrain.matrix[i][index] = 0;
-                
-                if((every && !paths.length) || !every)
-                    this.findPath(i, finalIdx, path, paths, every);
-                
-                terrain.matrix[index][i] = terrain.matrix[i][index] = 1;
-                path.pop();
-            }
-        }
-    }
-
-    calculateCurrNode()
-    {
-        for(let i = 0; i < terrain.nodes.length; ++i)
-            if(terrain.nodes[i].contains(this.pos))
-                return i;
-        return -1;
+        this.speed = character ? 2 : random(1, 3);
+        this.character = character;
+        this.outfit = outfit;
     }
 
     update()
@@ -89,7 +22,7 @@ class Npc extends Ant
         if(this.path.length) {
             this.idle = false;
             this.setAnim(textures.ant.walking);
-            const vel = terrain.nodes[this.path[0]].pos.copy().sub(this.pos).normalize().mult(2);
+            const vel = terrain.nodes[this.path[0]].pos.copy().sub(this.pos).normalize().mult(this.speed);
 
             const velAngle = vel.angle() + Math.PI / 2;
             const changes = [ velAngle, velAngle + 2 * Math.PI, velAngle - 2 * Math.PI ];
@@ -117,13 +50,16 @@ class Npc extends Ant
                 if(this.anim === textures.ant.idle)
                     this.idle = true;
             });
-            this.setTargetNode(Math.random() * terrain.nodes.length | 0, false);
+            if(!this.character)
+                this.setTargetNode(Math.random() * terrain.nodes.length | 0, false);
         }
     }
 
     finishedTextHandler()
     {
-        this.setTargetNode(5);
+        this.actions[this.actionIndex].finishedTextHandler(this);
+        if(this.actionIndex < this.actions.length - 1)
+            this.textBox.setTexts(this.actions[++this.actionIndex].dialog);
     }
 
     activate()
@@ -149,6 +85,16 @@ class Npc extends Ant
     {
         ctx.save();
         ctx.translate(...this.pos);
+
+        if(this.outfit) {
+            ctx.save();
+            ctx.rotate(this.angle);
+            const halfdims = this.dims.copy().div(2);
+            ctx.translate(...new Vec2().sub(halfdims));
+            ctx.drawImage(this.outfit, 0, 0, ...this.dims);
+            ctx.restore();
+        }
+        
         ctx.translate(0, -this.dims.y / 2)
         this.textBox.render();
         ctx.restore();

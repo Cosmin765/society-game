@@ -4,11 +4,12 @@ class Player extends Ant
     {
         super(pos);
         
-        this.nodeId = -1;
-        this.nextNodeId = -1;
-        this.available = [];
-        this.strict = false;
         this.carryingFood = false;
+        this.arrowData = {
+            visible: false,
+            getAngle: () => 0,
+            taskIdx: -1
+        };
     }
 
     update()
@@ -27,13 +28,16 @@ class Player extends Ant
         const nextPos = this.pos.copy().add(vel);
 
         let found = false;
-        for(const node of terrain.nodes)
+        for(let i = 0; i < terrain.nodes.length; ++i) {
+            const node = terrain.nodes[i];
             if(node.contains(nextPos)) {
+                this.currNode = i;
                 found = true;
                 if(node.displayInfo($(".node-info")))
                     $(".node-info").style.display = "block";
                 break;
             }
+        }
         
         if(!found) {
             $(".node-info").style.display = "none";
@@ -76,5 +80,23 @@ class Player extends Ant
 
             ctx.restore();
         }
+
+        if(this.arrowData.visible) {
+            ctx.save();
+            ctx.translate(...this.pos);
+            ctx.translate(0, adapt(-200));
+            ctx.rotate(this.arrowData.getAngle());
+            const w = adapt(100);
+            ctx.drawImage(textures.arrow, -w / 2, -w / 2, w, w);
+            ctx.restore();
+        }
+
+        ctx.save();
+        const halfdims = this.dims.copy().div(2);
+        ctx.translate(...this.pos);
+        ctx.rotate(this.angle);
+        ctx.translate(...new Vec2().sub(halfdims));
+        ctx.drawImage(textures.outline, 0, 0, ...this.dims);
+        ctx.restore();
     }
 }

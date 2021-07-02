@@ -1,8 +1,9 @@
 class ActionButton extends Interactive
 {
-    constructor(pos, text, handler = () => {})
+    constructor({ text, handler = () => {}, displayCondition = () => true })
     {
         const size = new Vec2(150, 75).modify(adapt);
+        const pos = new Vec2(width - adapt(100), height * 3 / 4);
 
         super(pos.x - size.x / 2, pos.y - size.y / 2, ...size);
         this.pos = pos.copy();
@@ -11,7 +12,7 @@ class ActionButton extends Interactive
         this.pressed = false;
         this.disabled = false;
         this.handler = handler.bind(this);
-        this.displayCondition = () => true;
+        this.displayCondition = displayCondition;
     }
 
     press()

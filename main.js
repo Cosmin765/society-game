@@ -2,11 +2,17 @@ window.onload = main;
 
 const $ = name => document.querySelector(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
-let joystick, player, terrain, nodesData, nodesInfo, offset;
+let joystick, player, terrain, nodesData, nodesInfo, offset, taskManager;
 let npcs = [];
 let buttons = {};
 
+const progress = {
+    movedFood: 0
+};
+
 const infoMap = {};
+
+const characters = {};
 
 function createNodeInfo(type, description)
 {
@@ -28,6 +34,7 @@ const wait = amount => new Promise(resolve => setTimeout(resolve, amount));
 
 const [ height, width ] = resolutions[2];
 const adapt = val => val * width / 480;
+const random = (min, max) => Math.random() * (max - min) + min;
 let ratio = 1;
 
 const textures = {
@@ -36,6 +43,9 @@ const textures = {
         walking: [],
     },
     path: null,
+    arrow: null,
+    managerOutfit: null,
+    outline: null
 };
 
 function loadImg(path)
@@ -56,6 +66,9 @@ async function preload()
     const img = await loadImg(`./assets/Idle_0.png`);
     textures.ant.idle.push(img);
     textures.path = await loadImg(`./assets/path.png`);
+    textures.arrow = await loadImg(`./assets/arrow.png`);
+    textures.managerOutfit = await loadImg(`./assets/manager.png`);
+    textures.outline = await loadImg(`./assets/outline.png`);
 
     nodesData = await (await fetch("./data/nodes.json")).json();
     nodesInfo = await (await fetch("./data/nodesInfo.json")).json();
@@ -71,7 +84,7 @@ async function main()
         [ "food", "This is the food source of the colony." ],
         [ "storage", "This is where the colony stores all its resources." ]
     ];
-    for(const [type, description ] of info)
+    for(const [type, description] of info)
     {
         infoMap[type] = createNodeInfo(type, description);
     }
@@ -89,34 +102,123 @@ async function main()
     $(".node-info").style.width = `${width / ratio * 0.8}px`;
     $(".node-info").style.left = `${width / ratio * 0.1}px`;
 
-    joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
-    // player = new Player(new Vec2(...nodesData[0][0]).modify(adapt));
-    player = new Player(new Vec2());
-
     const nodesPos = nodesData[0].map(pos => new Vec2(...pos).modify(adapt));
     const pairs = nodesData[1];
 
     terrain = new Terrain(nodesPos, pairs, nodesInfo);
 
-    for(let i = 0; i < 100; ++i) {
+    joystick = new Joystick(new Vec2(width / 2, height * 3 / 4));
+    player = new Player(new Vec2(...nodesData[0][2]).modify(adapt));
+
+    const managerActions = [
+        {
+            dialog: [
+                "Hello, Joe!",
+                "As I understood, you have become an adult and now you are searching for a job",
+                "Don't worry, we have a lot of work for you around the colony",
+                "Follow me!"
+            ],
+            finishedTextHandler: npc => {
+                npc.setTargetNode(6);
+                taskManager.addTasks([
+                    {
+                        getText: () => "Follow the manager",
+                        done: () => characters["manager"].pos.copy().sub(player.pos).dist() < adapt(50) && characters["manager"].idle,
+                        getTarget: () => characters["manager"].pos.copy()
+                    }
+                ]);
+            }
+        },
+        {
+            dialog: [
+                "This is the place where you're gonna prepare food",
+                "Come!"
+            ],
+            finishedTextHandler: npc => {
+                npc.setTargetNode(8);
+                taskManager.addTasks([
+                    {
+                        getText: () => "Follow the manager",
+                        done: () => characters["manager"].pos.copy().sub(player.pos).dist() < adapt(50) && characters["manager"].idle,
+                        getTarget: () => characters["manager"].pos.copy()
+                    }
+                ]);
+            }
+        },
+        {
+            dialog: [
+                "And this is where you're gonna store it",
+                "For your first job, you're gonna have to produce and store 8 pieces of food",
+                "Why 8? I don't know",
+                "You can see the location target of each task by pressing on that specific task",
+                "in the left bottom panel",
+                "Bring up that panel by pressing on the arrow button",
+                "After you're done, come and visit me"
+            ],
+            finishedTextHandler: npc => {
+                npc.setTargetNode(0);
+                taskManager.addTasks([
+                    {
+                        getText: () => `Prepare and store 8 pieces of food: ${progress.movedFood} / 8`,
+                        done: () => {
+                            if(progress.movedFood >= 8) {
+                                taskManager.addTasks([
+                                    {
+                                        getText: () => "Go to the manager",
+                                        done: () => characters["manager"].pos.copy().sub(player.pos).dist() < adapt(50),
+                                        getTarget: () => characters["manager"].pos.copy()
+                                    }
+                                ]);
+
+                                return true;
+                            }
+                            return false;
+                        },
+                        getTarget: () => terrain.nodes[player.carryingFood ? 8 : 6].pos.copy()
+                    }
+                ]);
+            }
+        }
+    ];
+
+    for(let i = 0; i < 30; ++i) {
         const npc = new Npc(new Vec2(...nodesData[0][Math.random() * nodesData[0].length | 0]).modify(adapt));
         npcs.push(npc);
     }
 
-    const btnPos = new Vec2(width - adapt(100), height * 3 / 4);
+    characters["manager"] = new Npc(terrain.nodes[4].pos.copy(), true, textures.managerOutfit, managerActions);
 
-    function foodHandler() {
-        player.carryingFood = true;
-        this.displayCondition = () => !player.carryingFood;
+    for(const type in characters)
+        npcs.push(characters[type]);
+
+    const foodBtnData = {
+        text: "Pick up",
+        handler: () => player.carryingFood = true,
+        displayCondition: () => !player.carryingFood
     };
 
-    function releaseHandler() {
-        player.carryingFood = false;
-        this.displayCondition = () => player.carryingFood;
-    }
+    const storageBtnData = {
+        text: "Release",
+        handler: () => {
+            player.carryingFood = false;
+            progress.movedFood++;
+        },
+        displayCondition: () => player.carryingFood
+    };
 
-    buttons["food"] = new ActionButton(btnPos.copy(), "Pick up", foodHandler);
-    buttons["storage"] = new ActionButton(btnPos.copy(), "Release", releaseHandler);
+    buttons["food"] = new ActionButton(foodBtnData);
+    buttons["storage"] = new ActionButton(storageBtnData);
+
+
+    const tasks = [
+        {
+            getText: () => "Go meet the manager",
+            done: () => characters["manager"].pos.copy().sub(player.pos).dist() < adapt(50),
+            getTarget: () => characters["manager"].pos.copy()
+        }
+    ];
+
+    taskManager = new TaskManager(tasks);
 
     offset = new Vec2();
 
@@ -136,6 +238,8 @@ function update()
 
     for(const npc of npcs)
         npc.update();
+
+    taskManager.update();
 
     offset = new Vec2(width / 2, height / 2).sub(player.pos);
 }
@@ -248,6 +352,18 @@ function setupEvents()
 
             if(!present)
                 btn.release();
+        }
+    });
+
+    $(".toggle-btn").addEventListener("click", () => {
+        const elements = [ $(".tasks"), $(".toggle-btn img") ];
+
+        if(elements[0].className.includes("invisible")) {
+            for(const el of elements)
+                el.className = el.className.replace("invisible", "visible");
+        } else {
+            for(const el of elements)
+                el.className = el.className.replace("visible", "invisible");
         }
     });
 }
