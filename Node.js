@@ -17,8 +17,8 @@ class Node
             <p>${this.desc}</p>
         `;
 
-        if(this.type in buttons)
-            buttons[this.type].visible = true;
+        // if(this.type in buttons)
+        //     buttons[this.type].visible = true;
 
         return true;
     }

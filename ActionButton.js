@@ -15,6 +15,11 @@ class ActionButton extends Interactive
         this.displayCondition = displayCondition;
     }
 
+    update()
+    {
+        this.visible = this.displayCondition();
+    }
+
     press()
     {
         if(!this.visible || !this.displayCondition())

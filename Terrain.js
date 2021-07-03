@@ -13,10 +13,10 @@ class Terrain
             this.matrix[i][j] = this.matrix[j][i] = 1;
         }
 
-        for(const index in nodesInfo)
+        for(const type in nodesInfo)
         {
-            const type = nodesInfo[index];
-            this.nodes[parseInt(index)].setInfo(infoMap[type]);
+            const index = nodesInfo[type];
+            this.nodes[index].setInfo(infoMap[type]);
         }
     }
 

@@ -14,10 +14,17 @@ class Npc extends Ant
         this.outfit = outfit;
     }
 
+    progressStory()
+    {
+        const condition = this.actions[this.actionIndex]?.condition; // which is a function
+        return (!condition || condition());
+    }
+
     update()
     {
         this.updateAnim();
-        this.textBox.update();
+        if(this.progressStory())
+            this.textBox.update();
 
         if(this.path.length) {
             this.idle = false;
@@ -65,8 +72,10 @@ class Npc extends Ant
     activate()
     {
         if(!this.activated && this.idle) {
-            this.textBox.reset();
-            this.textBox.visible = true;
+            if(this.progressStory()) {
+                this.textBox.reset();
+                this.textBox.visible = true;
+            }
 
             this.activated = true;
         }

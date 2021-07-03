@@ -178,6 +178,15 @@ async function main()
                     }
                 ]);
             }
+        },
+        {
+            dialog: [
+                "Good, I see you're done!"
+            ],
+            finishedTextHandler: npc => {
+                console.log("done");
+            },
+            condition: () => progress.movedFood >= 8
         }
     ];
 
@@ -194,7 +203,7 @@ async function main()
     const foodBtnData = {
         text: "Pick up",
         handler: () => player.carryingFood = true,
-        displayCondition: () => !player.carryingFood
+        displayCondition: () => !player.carryingFood && terrain.nodes[nodesInfo["food"]].contains(player.pos)
     };
 
     const storageBtnData = {
@@ -203,12 +212,11 @@ async function main()
             player.carryingFood = false;
             progress.movedFood++;
         },
-        displayCondition: () => player.carryingFood
+        displayCondition: () => player.carryingFood && terrain.nodes[nodesInfo["storage"]].contains(player.pos)
     };
 
     buttons["food"] = new ActionButton(foodBtnData);
     buttons["storage"] = new ActionButton(storageBtnData);
-
 
     const tasks = [
         {
@@ -232,7 +240,7 @@ async function main()
 function update()
 {
     for(const type in buttons)
-        buttons[type].visible = false; // reseting the visibility
+        buttons[type].update()
 
     player.update();
 
