@@ -9,20 +9,31 @@ class Npc extends Ant
         this.textBox = new TextBox(texts, adapt(200), this.finishedTextHandler.bind(this));
         this.activated = false;
         this.idle = true;
-        this.speed = character ? 2 : random(1, 3);
+        this.speed = adapt(character ? 2 : random(1, 3));
         this.character = character;
         this.outfit = outfit;
+    }
+
+    getID()
+    {
+        if(!this.character) return null;
+        for(const type in characters) {
+            if(characters[type] === this) {
+                return type;
+            }
+        }
     }
 
     progressStory()
     {
         const condition = this.actions[this.actionIndex]?.condition; // which is a function
-        return (!condition || condition());
+        return (!condition || condition(this)) && !player.textBox.visible;
     }
 
     update()
     {
         this.updateAnim();
+        this.speak();
         if(this.progressStory())
             this.textBox.update();
 
@@ -58,7 +69,7 @@ class Npc extends Ant
                     this.idle = true;
             });
             if(!this.character)
-                this.setTargetNode(Math.random() * terrain.nodes.length | 0, false);
+                this.setTargetNode((Math.random() * terrain.nodes.length) | 0, false);
         }
     }
 
@@ -67,16 +78,28 @@ class Npc extends Ant
         this.actions[this.actionIndex].finishedTextHandler(this);
         if(this.actionIndex < this.actions.length - 1)
             this.textBox.setTexts(this.actions[++this.actionIndex].dialog);
+        
+        const id = this.getID();
+        if(id) progress[id]++;
+    }
+
+    speak() {
+        if(this.textBox.visible || !this.idle || !this.progressStory() || (this.pos.copy().sub(player.pos).dist() > adapt(50))) return;
+
+        if(this.progressStory()) {
+            this.textBox.reset();
+            this.textBox.visible = true;        
+        }
+    }
+
+    stopSpeaking() {
+        this.textBox.visible = false;
     }
 
     activate()
     {
         if(!this.activated && this.idle) {
-            if(this.progressStory()) {
-                this.textBox.reset();
-                this.textBox.visible = true;
-            }
-
+            // this.speak();
             this.activated = true;
         }
     }
@@ -84,8 +107,7 @@ class Npc extends Ant
     deactivate()
     {
         if(this.activated) {
-            this.textBox.visible = false;
-            
+            this.stopSpeaking();
             this.activated = false;
         }
     }

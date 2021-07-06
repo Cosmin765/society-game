@@ -10,13 +10,15 @@ class Player extends Ant
             getAngle: () => 0,
             taskIdx: -1
         };
+        this.textBox = new TextBox([""], adapt(200), () => {}, "cyan");
     }
 
     update()
     {
         this.updateAnim();
+        this.textBox.update();
 
-        let vel = joystick.dir().normalize().mult(2);
+        let vel = joystick.dir().normalize().mult(adapt(2));
 
         if(vel.dist()) {
             this.angle = vel.angle() + Math.PI / 2;
@@ -95,8 +97,24 @@ class Player extends Ant
         const halfdims = this.dims.copy().div(2);
         ctx.translate(...this.pos);
         ctx.rotate(this.angle);
+        ctx.save();
         ctx.translate(...new Vec2().sub(halfdims));
         ctx.drawImage(textures.outline, 0, 0, ...this.dims);
         ctx.restore();
+
+        ctx.rotate(-this.angle);
+        ctx.translate(0, -this.dims.y / 2)
+        this.textBox.render();
+
+        ctx.restore();
+        
+    }
+
+    speak(text)
+    {
+        if(this.textBox.visible) return;
+        this.textBox.setTexts([text]);
+        this.textBox.reset();
+        this.textBox.visible = true;
     }
 }

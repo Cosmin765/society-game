@@ -1,13 +1,15 @@
 window.onload = main;
 
 const $ = name => document.querySelector(name);
+const $$ = name => document.querySelectorAll(name);
 const canvas = $("#c"), ctx = canvas.getContext("2d");
 let joystick, player, terrain, nodesData, nodesInfo, offset, taskManager;
 let npcs = [];
 let buttons = {};
 
 const progress = {
-    movedFood: 0
+    movedFood: 0,
+    manager: 0
 };
 
 const infoMap = {};
@@ -45,7 +47,8 @@ const textures = {
     path: null,
     arrow: null,
     managerOutfit: null,
-    outline: null
+    outline: null,
+    pills: null
 };
 
 function loadImg(path)
@@ -69,9 +72,28 @@ async function preload()
     textures.arrow = await loadImg(`./assets/arrow.png`);
     textures.managerOutfit = await loadImg(`./assets/manager.png`);
     textures.outline = await loadImg(`./assets/outline.png`);
+    textures.pills = await loadImg(`./assets/pills.png`);
 
     nodesData = await (await fetch("./data/nodes.json")).json();
     nodesInfo = await (await fetch("./data/nodesInfo.json")).json();
+}
+
+async function endGame()
+{
+    render = update = () => {};
+    [ "#c", ".tasks", ".node-info", ".slider" ].forEach(el => $(el).style.display = "none");
+
+    const cards = $$(".end-game div");
+    const values = [ 1, 0 ];
+
+    $(".end-game").style.display = "block";
+
+    for(const card of cards) {
+        for(const val of values) {
+            await wait(2000);
+            card.style.opacity = val;
+        }
+    }
 }
 
 async function main()
@@ -102,6 +124,8 @@ async function main()
     $(".node-info").style.width = `${width / ratio * 0.8}px`;
     $(".node-info").style.left = `${width / ratio * 0.1}px`;
 
+    $(".slider").style.width = `${width / ratio * 0.95}px`;
+
     const nodesPos = nodesData[0].map(pos => new Vec2(...pos).modify(adapt));
     const pairs = nodesData[1];
 
@@ -119,6 +143,7 @@ async function main()
                 "Follow me!"
             ],
             finishedTextHandler: npc => {
+                player.speak("Ok..?");
                 npc.setTargetNode(6);
                 taskManager.addTasks([
                     {
@@ -143,7 +168,8 @@ async function main()
                         getTarget: () => characters["manager"].pos.copy()
                     }
                 ]);
-            }
+            },
+            condition: npc => terrain.nodes[6].contains(npc.pos)
         },
         {
             dialog: [
@@ -157,6 +183,7 @@ async function main()
             ],
             finishedTextHandler: npc => {
                 npc.setTargetNode(0);
+                player.speak("I hate this");
                 taskManager.addTasks([
                     {
                         getText: () => `Prepare and store 8 pieces of food: ${progress.movedFood} / 8`,
@@ -177,16 +204,65 @@ async function main()
                         getTarget: () => terrain.nodes[player.carryingFood ? 8 : 6].pos.copy()
                     }
                 ]);
+            },
+            condition: npc => terrain.nodes[8].contains(npc.pos)
+        },
+        {
+            dialog: [
+                "Good, I see you're done!",
+            ],
+            finishedTextHandler: npc => {
+                player.speak("...");
+            },
+            condition: () => progress.movedFood >= 8
+        },
+        {
+            dialog: [
+                "Why are you sad?"
+            ],
+            finishedTextHandler: npc => {
+                player.speak("I thought being an adult would be cool");
             }
         },
         {
             dialog: [
-                "Good, I see you're done!"
+                "It is, you get to do all of these cool things, like paying taxes and worrying about your budget"
             ],
-            finishedTextHandler: npc => {
-                console.log("done");
-            },
-            condition: () => progress.movedFood >= 8
+            finishedTextHandler: () => {
+                player.speak("If this is what is means to be an adult, then I wanna be a child again");
+            }
+        },
+        {
+            dialog: [
+                "Wouldn't we all?...",
+                "Well.. you have to embrace all of this, because this is what you'll be doing for the rest of your life",
+                "Anyway, can you bring my sleeping pills to me?"
+            ],
+            finishedTextHandler: () => {
+                player.speak("Sure, where are they?");
+            }
+        },
+        {
+            dialog: [
+                "Check your tasks panel"
+            ],
+            finishedTextHandler: () => {
+                player.speak("...");
+                taskManager.addTasks([
+                    {
+                        getText: () => "Go find the manager's pills",
+                        done: () => terrain.nodes[11].contains(player.pos),
+                        getTarget: () => terrain.nodes[11].pos.copy()
+                    }
+                ]);
+                terrain.nodes[11].setImg(textures.pills);
+                const btnData = {
+                    text: "Escape reality",
+                    handler: () => endGame(),
+                    displayCondition: () => terrain.nodes[11].contains(player.pos)
+                };
+                buttons["pills"] = new ActionButton(btnData);
+            }
         }
     ];
 
@@ -294,8 +370,7 @@ function setupEvents()
         for(let i = 0; i < e.touches.length; ++i)
         {
             const touch = e.touches[i];
-            const pos = new Vec2(touch.pageX, touch.pageY);
-            pos.mult(ratio);
+            const pos = new Vec2(touch.pageX, touch.pageY).mult(ratio);
 
             if(joystick.clicked(pos)) {
                 joystick.setTouch(touch.identifier, pos);
@@ -311,16 +386,37 @@ function setupEvents()
         }
     });
 
+    addEventListener("mousedown", e => {
+        const pos = new Vec2(e.clientX, e.clientY).mult(ratio);
+
+        if(joystick.clicked(pos)) {
+            joystick.setTouch(true, pos);
+        }
+
+        for(const type in buttons)
+        {
+            const btn = buttons[type];
+            if(btn.clicked(pos))
+                btn.press();
+        }
+    });
+
     addEventListener("touchmove", e => {
         for(let i = 0; i < e.touches.length; ++i)
         {
             const touch = e.touches[i];
-            const pos = new Vec2(touch.pageX, touch.pageY);
-            pos.mult(ratio);
+            const pos = new Vec2(touch.pageX, touch.pageY).mult(ratio);
 
             if(joystick.touchID === touch.identifier)
-            joystick.update(pos);
+                joystick.update(pos);
         }
+    });
+
+    addEventListener("mousemove", e => {
+        const pos = new Vec2(e.clientX, e.clientY).mult(ratio);
+
+        if(joystick.touchID)
+            joystick.update(pos);
     });
 
     addEventListener("touchend", e => {
@@ -329,8 +425,7 @@ function setupEvents()
         for(let i = 0; i < e.touches.length; ++i)
         {
             const touch = e.touches[i];
-            const pos = new Vec2(touch.pageX, touch.pageY);
-            pos.mult(ratio);
+            const pos = new Vec2(touch.pageX, touch.pageY).mult(ratio);
 
             if(pos.equals(joystick.lastPos)) {
                 present = true;
@@ -350,7 +445,7 @@ function setupEvents()
             for(let i = 0; i < e.touches.length; ++i)
             {
                 const touch = e.touches[i];
-                const pos = adjustVec(new Vec2(touch.pageX, touch.pageY));
+                const pos = new Vec2(touch.pageX, touch.pageY).mult(ratio);
 
                 if(btn.clicked(pos)) {
                     present = true;
@@ -361,6 +456,13 @@ function setupEvents()
             if(!present)
                 btn.release();
         }
+    });
+
+    addEventListener("mouseup", e => {
+        joystick.removeTouch();
+
+        for(const type in buttons)
+            buttons[type].release();
     });
 
     $(".toggle-btn").addEventListener("click", () => {

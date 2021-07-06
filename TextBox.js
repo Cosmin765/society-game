@@ -1,6 +1,6 @@
 class TextBox
 {
-    constructor(texts = [], width = adapt(150), finishedTextHandler)
+    constructor(texts = [], width = adapt(150), finishedTextHandler, color = null)
     {
         this.size = new Vec2(width, 0);
         this.setTexts(texts);
@@ -9,6 +9,7 @@ class TextBox
         this.visible = false;
         this.frozen = false;
         this.finishedTextHandler = finishedTextHandler;
+        this.color = color;
     }
 
     setTexts(texts)
@@ -88,7 +89,7 @@ class TextBox
     {
         ctx.save();
         ctx.strokeStyle = "black";
-        ctx.fillStyle = "white";
+        ctx.fillStyle = this.color || "white";
         ctx.translate(...this.size.copy().div(-2));
         ctx.beginPath();
         const pad = adapt(10);

@@ -6,6 +6,7 @@ class Node
         this.pos = pos.copy();
         this.type = this.desc = null;
         this.setInfo(info);
+        this.img = null;
     }
 
     displayInfo(el)
@@ -17,9 +18,6 @@ class Node
             <p>${this.desc}</p>
         `;
 
-        // if(this.type in buttons)
-        //     buttons[this.type].visible = true;
-
         return true;
     }
 
@@ -27,6 +25,11 @@ class Node
     {
         this.desc = info.description;
         this.type = info.type;
+    }
+
+    setImg(img)
+    {
+        this.img = img;
     }
 
     render()
@@ -39,10 +42,16 @@ class Node
         ctx.closePath();
         ctx.fill();
 
-        ctx.font = "30px Arial";
-        ctx.fillStyle = "black";
-        ctx.translate(0, -adapt(100));
-        ctx.fillText(terrain.nodes.indexOf(this), ...this.pos);
+        if(this.img) {
+            ctx.translate(...this.pos);
+            const w = this.w * 3 / 4;
+            ctx.drawImage(this.img, -w / 2, -w / 2, w, w);
+        }
+
+        // ctx.font = "30px Arial";
+        // ctx.fillStyle = "black";
+        // ctx.translate(0, -adapt(100));
+        // ctx.fillText(terrain.nodes.indexOf(this), ...this.pos);
 
         ctx.restore();
     }

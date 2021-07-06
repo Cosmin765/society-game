@@ -54,7 +54,7 @@ class ActionButton extends Interactive
         ctx.fillRect(...rectData);
         ctx.strokeRect(...rectData);
         
-        ctx.font = `${adapt(28)}px Arial`;
+        ctx.font = `${adapt(22)}px Arial`;
         ctx.fillStyle = this.pressed ? "red" : "#000";
         const textWidth = ctx.measureText(this.text).width;
         ctx.fillText(this.text, ...this.pos.copy().add(new Vec2(-textWidth / 2, adapt(10))));
